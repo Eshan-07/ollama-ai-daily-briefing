@@ -1,0 +1,526 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are generating a daily morning briefing email.\n\nTasks:\n1. Get today’s weather for San Francisco, US.\n2. Select 2–3 positive, trending news stories.\n3. Retrieve ONE fun fact from Wikipedia.\n\nRules:\n- Do not repeat content from previous days.\n- Avoid politics, international conflicts, national security, military topics, and celebrity gossip.\n- Use Wikipedia ONLY for the fun fact.\n- Keep the content concise and factual.\n\nOutput format:\n- Markdown\n- Mini email newsletter\n- No explanations or tool logs\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -720,
+        -240
+      ],
+      "id": "86a99baa-b244-4276-8178-cf40f22f9a4c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        16
+      ],
+      "id": "85163907-d25c-422a-90db-6ec6f33a3a42",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "FzVWXydtYkOSk69Y",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "my_test_ID"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -784,
+        16
+      ],
+      "id": "5f7aa86b-1951-4362-a77d-16f9c13eda7d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        16
+      ],
+      "id": "b4ab2f98-bb57-4082-8603-e4a69ad718e9",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        16
+      ],
+      "id": "bc6d6bf2-8299-4a37-99c4-5ae9c9e27518",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "fvHHZVWJcicovgZK",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "cityName": "San Francisco, US"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        16
+      ],
+      "id": "938a4b84-7ff9-428d-a7e0-dec93f12f3b0",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "EmJKqpAX5VIBgFLn",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1456,
+        -240
+      ],
+      "id": "4f7a9b41-376a-4735-a4f4-4a5952d0eb57",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "eshan280403@gmail.com",
+        "subject": "=Daily Briefing: {{ $('Schedule Trigger').item.json['Readable date'] }}",
+        "message": "={{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        -240
+      ],
+      "id": "af7d456d-3581-4798-b1fa-c9fd15e065d1",
+      "name": "Send a message",
+      "webhookId": "f3ba7394-1f4d-4e41-9cc3-cb22c35223ed",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xToEjtQLtMqhRdW6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -240
+      ],
+      "id": "ae684d27-c2ec-473c-9a05-50bc72ac1437",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "llama3.1:latest",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an HTML email formatter.\n\nTASK:\nBeautify the HTML provided below using INLINE CSS only.\nFormat it as a clean, modern email newsletter.\n\nSTRICT RULES:\n- Output ONLY valid HTML\n- Do NOT explain anything\n- Do NOT include tool calls, logs, notes, or comments\n- Do NOT include phrases like \"Here is\", \"I added\", or \"Calling\"\n- Do NOT wrap the output in markdown\n- Do NOT include <html>, <head>, or <body> tags\n\nINPUT HTML:\n{{ $json.data }}\n"
+            },
+            {
+              "content": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -240
+      ],
+      "id": "afd6467e-5a24-43fa-8230-91cf112cbca0",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "hzB2ktEFtI1rNfwB",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "llama3.1:latest",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Extract EXACTLY:\n- ONE news item\n- ONE general-knowledge fun fact\n\nRules:\n- Do NOT repeat previous entries\n- Do NOT add explanations\n- Do NOT add commentary\n- Do NOT add markdown\n- Do NOT add extra text\n\nReturn ONLY valid minified JSON in this exact schema:\n\n{\n  \"date\": \"<ISO-8601 timestamp>\",\n  \"news\": \"<1–2 sentence news summary>\",\n  \"fun_fact\": \"<1 short general-knowledge fact>\"\n}\n\nIf any field is missing, return an empty string for that field.\n"
+            },
+            {
+              "content": "=Daily Briefing :  {{ $('Markdown').item.json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -240
+      ],
+      "id": "614cd3b6-1e72-496e-bd34-e8c5192005a6",
+      "name": "Message a model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "hzB2ktEFtI1rNfwB",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU",
+          "mode": "list",
+          "cachedResultName": "Daily Briefing Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('Schedule Trigger').item.json.timestamp }}",
+            "News": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('News', ``, 'string') }}",
+            "Funfact": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Funfact', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "News",
+              "displayName": "News",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Funfact",
+              "displayName": "Funfact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        -32
+      ],
+      "id": "c83d5706-9e51-4c7a-b9f7-dcb06fa7045b",
+      "name": "Append row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rJQBlc68ij9FtFUP",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "llama3.1:latest",
+          "mode": "list",
+          "cachedResultName": "llama3.1:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Your job is to review the linked Google Sheet to see what the previous daily briefs contained. The goal is not to repeat any fun facts or news stories. Generate a description for the next AI in the chain to understand  which topics to avoid wit the briefing. "
+            },
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -240
+      ],
+      "id": "113f0a79-3426-4dcc-a6fc-35e1a379cbed",
+      "name": "Message a model2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "hzB2ktEFtI1rNfwB",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU",
+          "mode": "list",
+          "cachedResultName": "Daily Briefing Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avJTIpNFX_cTMwQecDA1flzCLiGr7KQOkCKrUUHX0KU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -1088,
+        16
+      ],
+      "id": "53b8c9d5-bf18-4dd4-bf77-4a5fc6668c68",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rJQBlc68ij9FtFUP",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "28230374-5f25-43fc-b233-38683d7c83db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6a963e24ceef5947328686e45204a07021d4d18bef9fbd1b7308b131067603b0"
+  },
+  "id": "YOFfQrne2ZtZMBSFqXNyP",
+  "tags": []
+}
